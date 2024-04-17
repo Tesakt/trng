@@ -14,12 +14,6 @@ def resize_image(image_path, target_size=(1024, 1024)):
     cropped_image = image.crop((left, top, right, bottom))
     return cropped_image
 
-def find_closest_palette_color(oldpixel):
-    """
-    Find the closest palette color for the old pixel value.
-    """
-    return 255 if oldpixel >= 128 else 0
-
 def dithering(image):
     """
     Apply error diffusion dithering to the image.
@@ -29,7 +23,7 @@ def dithering(image):
     for y in range(height):
         for x in range(width):
             oldpixel = pixels[x, y][0]  # Wybierz kanał jasności (luminancji) dla piksela
-            newpixel = find_closest_palette_color(oldpixel)
+            newpixel = 255 if oldpixel >= 128 else 0
             pixels[x, y] = (newpixel, newpixel, newpixel)  # Ustaw nową wartość dla wszystkich kanałów
             quant_error = oldpixel - newpixel
             if x + 1 < width:
@@ -162,5 +156,3 @@ def process_images_in_folder(folder_path):
 folder_path = "src"  # Ścieżka do folderu z obrazami
 process_images_in_folder(folder_path)
 print("Random sequence saved to random_sequence.txt")
-
-
