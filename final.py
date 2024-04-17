@@ -1,5 +1,5 @@
 from PIL import Image
-import numpy as np
+import os
 
 def resize_image(image_path, target_size=(1024, 1024)):
     """
@@ -133,31 +133,34 @@ def process_image(image_path):
     binary_image = dithered_image.convert('1')
     chaos_image = arnold_cat_map(binary_image)  # Otrzymujemy obiekt typu Image
     encrypted_blocks = encrypt_image_blocks(chaos_image)  # Otrzymujemy listę bloków
-
     combined_sequence = zigzag_scan(encrypted_blocks)  # Przekazujemy listę bloków do funkcji zigzag_scan
 
     combined_sequence_str = ''.join(str(pixel) for block in combined_sequence for pixel in block)
 
-    # Zapisz sekwencję do pliku
-        
-
-
     return combined_sequence_str
 
-# Przykładowe użycie
-image_path = "aloes1.jpg"  # Zmień na nazwę pliku obrazu
-image1 = process_image(image_path)
-# Zapisz sekwencję do pliku
-with open("random_sequence.txt", "w") as file:
-    file.write(image1)
-image_path = "aloes2.jpg"  
-image2 = process_image(image_path)
-with open("random_sequence.txt", "a") as file:
-    file.write(image2)
-image_path = "aloes3.jpg"
-image3 = process_image(image_path)
-with open("random_sequence.txt", "a") as file:
-    file.write(image3)
+def process_images_in_folder(folder_path):
+    """
+    Process all images in the specified folder: resize, apply error diffusion dithering,
+    and append the result to random_sequence.txt.
+    """
+    # Pobierz listę plików z rozszerzeniem .jpg z folderu źródłowego
+    image_files = [f for f in os.listdir(folder_path) if f.endswith('.jpg')]
+    
+    # Wyczyść zawartość pliku random_sequence.txt, jeśli już istnieje
+    if os.path.exists("random_sequence.txt"):
+        open("random_sequence.txt", "w").close()
+    
+    # Przetwórz każdy obraz z folderu i zapisz wynik do pliku
+    for image_file in image_files:
+        image_path = os.path.join(folder_path, image_file)
+        random_sequence = process_image(image_path)
+        with open("random_sequence.txt", "a") as file:
+            file.write(random_sequence)
+
+
+folder_path = "src"  # Ścieżka do folderu z obrazami
+process_images_in_folder(folder_path)
 print("Random sequence saved to random_sequence.txt")
 
 
