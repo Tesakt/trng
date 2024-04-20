@@ -1,5 +1,6 @@
 from PIL import Image
 import os
+import struct
 
 def resize_image(image_path, target_size=(1024, 1024)):
     """
@@ -142,17 +143,18 @@ def process_images_in_folder(folder_path):
     image_files = [f for f in os.listdir(folder_path) if f.endswith('.jpg')]
     
     # Wyczyść zawartość pliku random_sequence.txt, jeśli już istnieje
-    if os.path.exists("random_sequence.txt"):
-        open("random_sequence.txt", "w").close()
+    if os.path.exists("random_sequence.bin"):
+        open("random_sequence.bin", "wb").close()
     
     # Przetwórz każdy obraz z folderu i zapisz wynik do pliku
     for image_file in image_files:
         image_path = os.path.join(folder_path, image_file)
         random_sequence = process_image(image_path)
-        with open("random_sequence.txt", "a") as file:
-            file.write(random_sequence)
+        binary_data = bytes(int(random_sequence[i:i+8], 2) for i in range(0, len(random_sequence), 8))
+        with open("random_sequence.bin", "ab") as file:
+            file.write(binary_data)
 
 
 folder_path = "src"  # Ścieżka do folderu z obrazami
 process_images_in_folder(folder_path)
-print("Random sequence saved to random_sequence.txt")
+print("Random sequence saved to random_sequence.bin")
