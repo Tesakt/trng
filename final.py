@@ -1,6 +1,7 @@
 from PIL import Image
+import requests
 import os
-
+from io import BytesIO
 def resize_image(image_path, target_size=(1024, 1024)):
     """
     Resize the image to the target size while keeping the center of the image.
@@ -141,13 +142,13 @@ def zigzag_scan(matrix):
     return [result[i:i+128] for i in range(0, len(result), 128)]
 
 
-def process_image(image_path):
+def process_image(Downloaded):
     """
     Process the image: resize and apply error diffusion dithering.
     Return the binary image.
     """
-    resized_image = resize_image(image_path)
-    dithered_image = dithering(resized_image)
+   
+    dithered_image = dithering(Downloaded)
     convert_image_to_binary_list(dithered_image)
     binary_image = dithered_image.convert('1')
     chaos_image = arnold_cat_map(binary_image)  # Otrzymujemy obiekt typu Image
@@ -164,8 +165,6 @@ def process_images_in_folder(folder_path):
     Process all images in the specified folder: resize, apply error diffusion dithering,
     and append the result to random_sequence.txt.
     """
-    # Pobierz listę plików z rozszerzeniem .jpg z folderu źródłowego
-    image_files = [f for f in os.listdir(folder_path) if f.endswith('.jpg')]
     
     # Wyczyść zawartość pliku random_sequence.txt, jeśli już istnieje
     if os.path.exists("random_sequence.bin"):
@@ -174,13 +173,14 @@ def process_images_in_folder(folder_path):
     if os.path.exists("extractor_bites.bin"):
         open("extractor_bites.bin", "wb").close()
     
-    # Przetwórz każdy obraz z folderu i zapisz wynik do pliku
-    for image_file in image_files:
-        image_path = os.path.join(folder_path, image_file)
-        random_sequence = process_image(image_path)
+    for i in range(0, 20):
+        url = "https://picsum.photos/1024/1024"
+        response = requests.get(url, stream=True)
+        im = Image.open(BytesIO(response.content))
+        random_sequence = process_image(im)
         binary_data = bytes(int(random_sequence[i:i+8], 2) for i in range(0, len(random_sequence), 8))
         with open("random_sequence.bin", "ab") as file:
-            file.write(binary_data)
+            file.write(binary_data) 
 
 
 folder_path = "src"  # Ścieżka do folderu z obrazami
