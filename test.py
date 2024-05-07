@@ -1,4 +1,11 @@
 import matplotlib.pyplot as plt
+import numpy as np
+
+def calculate_entropy(data):
+    _, counts = np.unique(data, return_counts=True)
+    probabilities = counts / len(data)
+    entropy = -np.sum(probabilities * np.log2(probabilities))
+    return entropy
 
 def test_bit_randomness(file_path):
     # Otwieramy plik i odczytujemy zawartość jako dane binarne
@@ -15,6 +22,10 @@ def test_bit_randomness(file_path):
     plt.ylabel('Liczba wystąpień')
     plt.show()
 
+    # Obliczamy entropię bitową
+    entropy = calculate_entropy(integers)
+    print("Bit entropy:", entropy)
+
 # Testujemy funkcję dla pliku random_sequence.bin
-# test_bit_randomness('random_sequence.bin')
-test_bit_randomness('extractor_bites.bin')
+test_bit_randomness('random_sequence.bin')
+# test_bit_randomness('extractor_bites.bin')
