@@ -15,6 +15,7 @@ def resize_image(image_path, target_size=(1024, 1024)):
     cropped_image = image.crop((left, top, right, bottom))
     return cropped_image
 
+
 def dithering(image):
     """
     Apply error diffusion dithering to the image.
@@ -37,6 +38,19 @@ def dithering(image):
                 pixels[x + 1, y + 1] = tuple(int(a + quant_error * 1 / 16) for a in pixels[x + 1, y + 1])
     return image
 
+def convert_image_to_binary_list(image):
+    """
+    Convert the image to a binary list.
+    """
+    width, height = image.size
+    binary_list = []
+    for y in range(height):
+        for x in range(width):
+            pixel = image.getpixel((x, y))
+            binary_list.append(0 if pixel == 255 else 1)
+    return binary_list
+
+
 def arnold_cat_map(image, iterations=7):
     """
     Apply Arnold cat map to the image.
@@ -57,6 +71,7 @@ def arnold_cat_map(image, iterations=7):
         image = new_image
 
     return image
+
 
 def encrypt_image_blocks(image):
     """
@@ -125,6 +140,9 @@ def process_image(image_path):
     """
     resized_image = resize_image(image_path)
     dithered_image = dithering(resized_image)
+    extractor_bites = convert_image_to_binary_list(dithered_image)
+    with open("extractor_bites.bin", "ab") as file:
+        file.write(bytearray(extractor_bites))
     binary_image = dithered_image.convert('1')
     chaos_image = arnold_cat_map(binary_image)  # Otrzymujemy obiekt typu Image
     encrypted_blocks = encrypt_image_blocks(chaos_image)  # Otrzymujemy listę bloków
@@ -133,6 +151,7 @@ def process_image(image_path):
     combined_sequence_str = ''.join(str(pixel) for block in combined_sequence for pixel in block)
 
     return combined_sequence_str
+
 
 def process_images_in_folder(folder_path):
     """

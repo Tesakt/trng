@@ -16,4 +16,6 @@ def test_bit_randomness(file_path):
     plt.show()
 
 # Testujemy funkcję dla pliku random_sequence.bin
-test_bit_randomness('random_sequence.bin')
+# test_bit_randomness('random_sequence.bin')
+# test_bit_randomness('extractor_bites.bin')
+test_bit_randomness('extractor_bites.bin')
