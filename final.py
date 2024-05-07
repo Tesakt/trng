@@ -1,6 +1,5 @@
 from PIL import Image
 import os
-import struct
 
 def resize_image(image_path, target_size=(1024, 1024)):
     """
@@ -47,7 +46,16 @@ def convert_image_to_binary_list(image):
     for y in range(height):
         for x in range(width):
             pixel = image.getpixel((x, y))
-            binary_list.append(0 if pixel == 255 else 1)
+            binary_list.append(1 if pixel[0] == 255 else 0)
+            
+    # save binary list to file
+    with open("extractor_bites.bin", "ab") as file:
+        for i in range(0, len(binary_list), 8):
+            byte = 0
+            for j in range(8):
+                byte |= binary_list[i + j] << (7 - j)
+            file.write(bytes([byte]))
+            
     return binary_list
 
 
@@ -140,9 +148,7 @@ def process_image(image_path):
     """
     resized_image = resize_image(image_path)
     dithered_image = dithering(resized_image)
-    extractor_bites = convert_image_to_binary_list(dithered_image)
-    with open("extractor_bites.bin", "ab") as file:
-        file.write(bytearray(extractor_bites))
+    convert_image_to_binary_list(dithered_image)
     binary_image = dithered_image.convert('1')
     chaos_image = arnold_cat_map(binary_image)  # Otrzymujemy obiekt typu Image
     encrypted_blocks = encrypt_image_blocks(chaos_image)  # Otrzymujemy listę bloków
@@ -164,6 +170,9 @@ def process_images_in_folder(folder_path):
     # Wyczyść zawartość pliku random_sequence.txt, jeśli już istnieje
     if os.path.exists("random_sequence.bin"):
         open("random_sequence.bin", "wb").close()
+        
+    if os.path.exists("extractor_bites.bin"):
+        open("extractor_bites.bin", "wb").close()
     
     # Przetwórz każdy obraz z folderu i zapisz wynik do pliku
     for image_file in image_files:
