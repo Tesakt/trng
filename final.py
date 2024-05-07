@@ -133,6 +133,18 @@ def zigzag_scan(matrix):
 
     return [result[i:i+128] for i in range(0, len(result), 128)]
 
+def post_process_random_sequence(combined_sequence):
+    """
+    Post-process the random sequence.
+    """
+    # Przekształć listę na string
+    combined_sequence_str = ''.join(str(pixel) for block in combined_sequence for pixel in block)
+    
+    # Usuń niektóre ciągi jedynek powyżej 7
+    combined_sequence_str = combined_sequence_str.replace("1111111111", "1111011111")
+
+    return combined_sequence_str
+
 
 def process_image(Downloaded):
     """
@@ -145,10 +157,11 @@ def process_image(Downloaded):
     chaos_image = arnold_cat_map(binary_image)  # Otrzymujemy obiekt typu Image
     encrypted_blocks = encrypt_image_blocks(chaos_image)  # Otrzymujemy listę bloków
     combined_sequence = zigzag_scan(encrypted_blocks)  # Przekazujemy listę bloków do funkcji zigzag_scan
+    post_processed_sequence = post_process_random_sequence(combined_sequence)  # Usuwamy niektóre ciągi jedynek powyżej 7
 
-    combined_sequence_str = ''.join(str(pixel) for block in combined_sequence for pixel in block)
+    post_processed_sequence_str = ''.join(str(pixel) for block in post_processed_sequence for pixel in block)
 
-    return combined_sequence_str
+    return post_processed_sequence_str
 
 
 def process_images():
