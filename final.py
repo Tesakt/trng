@@ -2,18 +2,6 @@ from PIL import Image
 import requests
 import os
 from io import BytesIO
-def resize_image(image_path, target_size=(1024, 1024)):
-    """
-    Resize the image to the target size while keeping the center of the image.
-    """
-    image = Image.open(image_path)
-    width, height = image.size
-    left = (width - target_size[0]) / 2
-    top = (height - target_size[1]) / 2
-    right = (width + target_size[0]) / 2
-    bottom = (height + target_size[1]) / 2
-    cropped_image = image.crop((left, top, right, bottom))
-    return cropped_image
 
 
 def dithering(image):
@@ -25,7 +13,7 @@ def dithering(image):
     for y in range(height):
         for x in range(width):
             oldpixel = pixels[x, y][0]  # Wybierz kanał jasności (luminancji) dla piksela
-            newpixel = 255 if oldpixel >= 128 else 0
+            newpixel = 255 if oldpixel >= 128 else 0 # Binaryzacja piksela
             pixels[x, y] = (newpixel, newpixel, newpixel)  # Ustaw nową wartość dla wszystkich kanałów
             quant_error = oldpixel - newpixel
             if x + 1 < width:
@@ -38,7 +26,7 @@ def dithering(image):
                 pixels[x + 1, y + 1] = tuple(int(a + quant_error * 1 / 16) for a in pixels[x + 1, y + 1])
     return image
 
-def convert_image_to_binary_list(image):
+def image_to_binary_to_file(image):
     """
     Convert the image to a binary list.
     """
@@ -47,9 +35,9 @@ def convert_image_to_binary_list(image):
     for y in range(height):
         for x in range(width):
             pixel = image.getpixel((x, y))
-            binary_list.append(1 if pixel[0] == 255 else 0)
+            binary_list.append(1 if pixel[0] == 255 else 0) # Dodajemy wartość binarną do listy
             
-    # save binary list to file
+    # Zapisujemy listę binarną do pliku
     with open("extractor_bites.bin", "ab") as file:
         for i in range(0, len(binary_list), 8):
             byte = 0
@@ -96,6 +84,7 @@ def encrypt_image_blocks(image):
 
             for dy in range(4):
                 for dx in range(4):
+                    # Bierzemy 4 x 4 blok i sprawdzamy, ile jest czarnych pikseli
                     pixel = image.getpixel((x + dx, y + dy))
                     if pixel == 0:
                         black_pixel_count += 1
@@ -108,6 +97,9 @@ def encrypt_image_blocks(image):
 
 
 def zigzag_scan(matrix):
+    """
+    Perform zigzag scan on the matrix.
+    """
     if not matrix:
         return []
 
@@ -147,10 +139,9 @@ def process_image(Downloaded):
     Process the image: resize and apply error diffusion dithering.
     Return the binary image.
     """
-   
-    dithered_image = dithering(Downloaded)
-    convert_image_to_binary_list(dithered_image)
-    binary_image = dithered_image.convert('1')
+    dithered_image = dithering(Downloaded) # Zastosowanie ditheringu do obrazu
+    image_to_binary_to_file(dithered_image) # Zapisujemy obraz binarny do pliku
+    binary_image = dithered_image.convert('1') # Konwersja obrazu na obraz binarny
     chaos_image = arnold_cat_map(binary_image)  # Otrzymujemy obiekt typu Image
     encrypted_blocks = encrypt_image_blocks(chaos_image)  # Otrzymujemy listę bloków
     combined_sequence = zigzag_scan(encrypted_blocks)  # Przekazujemy listę bloków do funkcji zigzag_scan
@@ -160,13 +151,12 @@ def process_image(Downloaded):
     return combined_sequence_str
 
 
-def process_images_in_folder(folder_path):
+def process_images():
     """
     Process all images in the specified folder: resize, apply error diffusion dithering,
     and append the result to random_sequence.txt.
     """
-    
-    # Wyczyść zawartość pliku random_sequence.txt, jeśli już istnieje
+    # Wyczyść zawartość plików przed zapisaniem nowych danych
     if os.path.exists("random_sequence.bin"):
         open("random_sequence.bin", "wb").close()
         
@@ -174,15 +164,18 @@ def process_images_in_folder(folder_path):
         open("extractor_bites.bin", "wb").close()
     
     for i in range(0, 20):
+        # Pobieramy obraz z internetu
         url = "https://picsum.photos/1024/1024"
         response = requests.get(url, stream=True)
         im = Image.open(BytesIO(response.content))
+        
+        # Przetwarzamy obraz i zapisujemy sekwencję do pliku
         random_sequence = process_image(im)
         binary_data = bytes(int(random_sequence[i:i+8], 2) for i in range(0, len(random_sequence), 8))
         with open("random_sequence.bin", "ab") as file:
             file.write(binary_data) 
 
 
-folder_path = "src"  # Ścieżka do folderu z obrazami
-process_images_in_folder(folder_path)
-print("Random sequence saved to random_sequence.bin")
+if __name__ == "__main__":
+    process_images()
+    print("Random sequences saved to random_sequence.bin and extractor_bites.bin")

@@ -26,6 +26,7 @@ def test_bit_randomness(file_path):
     entropy = calculate_entropy(integers)
     print("Bit entropy:", entropy)
 
-# Testujemy funkcję dla pliku random_sequence.bin
-test_bit_randomness('extractor_bites.bin')
-test_bit_randomness('random_sequence.bin')
+if __name__ == '__main__':
+    # Testujemy funkcję dla plików extractor_bites.bin i random_sequence.bin
+    test_bit_randomness('extractor_bites.bin')
+    test_bit_randomness('random_sequence.bin')
